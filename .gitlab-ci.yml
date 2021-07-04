@@ -1,0 +1,8 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: d3pre5s/molecule:2.22
+  script:
+    - molecule test

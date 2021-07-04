@@ -1,0 +1,65 @@
+---
+# tasks file for ansible-role-nginx
+- name: nginx | Define nginx_user
+  set_fact:
+    nginx_user: "{{ nginx_user }}"
+  when: nginx_user is not defined
+
+# install
+- name: "nginx | Add PPA {{ nginx_ppa_source }}/{{ nginx_ppa_version }} for nginx"
+  apt_repository:
+    repo: 'ppa:{{ nginx_ppa_source }}/{{ nginx_ppa_version }}'
+    state: present
+    update_cache: yes
+  register: nginx_ppa_added
+  when: nginx_ppa_use
+  notify:
+    - "remove nginx"
+
+- meta: flush_handlers
+
+- name: nginx | Ensure nginx is installed
+  apt:
+    name: "{{ nginx_package_name }}"
+    state: present
+    update_cache: yes
+    default_release: "{{ nginx_default_release }}"
+
+- name: nginx | Ensure openssl is installed
+  apt:
+    name: openssl
+    state: present
+  when: nginx_dhparam
+
+# service
+- name: nginx | Ensure nginx is started and enabled to start at boot
+  service:
+    name: nginx
+    state: started
+    enabled: yes
+  changed_when: False
+
+# nginx.conf
+- name: nginx | Copy nginx configuration
+  template:
+    src: "{{ nginx_conf_path }}"
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+  register: nginx_flag_reload
+  when: nginx_replace_nginxconf
+
+# htpasswd
+- include: htpasswd.yml
+  when: nginx_htpasswd and nginx_htpasswd|length > 0
+
+# dhparam
+- name: nginx| Generate DH Parameters
+  openssl_dhparam:
+    path: "{{ nginx_dhparam_file | default('/etc/nginx/dhparams.pem') }}"
+    size: "{{ nginx_dhparam_size | default('4096') }}"
+  when: nginx_dhparam
+
+# sites
+- include: sites.yml

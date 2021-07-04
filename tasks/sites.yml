@@ -1,0 +1,47 @@
+---
+# vhosts
+- name: nginx | remove default site
+  file:
+    path: "{{ nginx_default_vhost_path }}"
+    state: absent
+  when: nginx_remove_default
+  notify:
+    - "service nginx reload"
+
+- name: nginx | Ensure nginx_sites_available_path exists
+  file:
+    path: "{{ nginx_sites_available_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0774
+
+- name: nginx| Ensure nginx_sites_enabled_path exists
+  file:
+    path: "{{ nginx_sites_enabled_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0774
+  register: nginx_flag_reload
+
+# templating nginx sites
+- name: nginx | configure sites
+  template:
+    src: "{{ item }}"
+    dest: "{{ nginx_sites_available_path }}"
+    backup: "yes"
+    mode: 0644
+  with_fileglob:
+    - "{{ nginx_templates_path }}/sites/*.conf.j2"
+  notify:
+    - "check nginx configuration"
+    - "service nginx reload"
+
+- name: nginx | enable new vhosts in nginx
+  file:
+    src: "{{ nginx_sites_available_path }}/{{ item | basename }}"
+    dest: "{{ nginx_sites_enabled_path }}/{{ item | basename }}"
+    state: link
+  with_fileglob:
+    - "{{ nginx_templates_path }}/sites/*.conf.j2"

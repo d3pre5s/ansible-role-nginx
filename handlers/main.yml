@@ -1,0 +1,14 @@
+---
+# handlers file for ansible-role-nginx
+- name: "remove nginx"
+  apt:
+    name: "{{ nginx_package_name }}"
+    state: absent
+
+- name: "check nginx configuration"
+  command: "nginx -t -c /etc/nginx/nginx.conf"
+
+- name: "service nginx reload"
+  service:
+    name: "nginx"
+    state: reloaded

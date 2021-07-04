@@ -1,0 +1,95 @@
+user {{ nginx_user }};
+pid /run/nginx.pid;
+worker_processes auto;
+worker_rlimit_nofile 128000;
+
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+    worker_connections 1024;
+    multi_accept off;
+}
+
+{% if nginx_extra_conf_options %}
+{{ nginx_extra_conf_options }}
+{% endif %}
+
+http {
+    ##
+    # Basic Settings
+    ##
+
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+
+    keepalive_timeout 65;
+    keepalive_requests 100;
+
+    server_tokens off;
+    server_names_hash_bucket_size 64;
+    server_name_in_redirect off;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    client_max_body_size {{ nginx_client_max_body_size }};
+
+    ##
+    # Logging Settings
+    ##
+
+    log_format custom '$remote_addr - $remote_user [$time_local] '
+                      '"$host" "$request" $status $body_bytes_sent '
+                      '"$http_referer" "$http_user_agent"';
+    access_log /var/log/nginx/access.log custom;
+    error_log /var/log/nginx/error.log;
+
+    log_format logstash_json escape=json '{ "@nginx_timestamp": "$time_iso8601", '
+                 '"uri": "$uri", '
+                 '"upstream_response_time": "$upstream_response_time", '
+                 '"request_time": $request_time, '
+                 '"body_bytes_sent": $body_bytes_sent, '
+                 '"request_time": $request_time, '
+                 '"status": $status, '
+                 '"server_port": $server_port, '
+                 '"remote_addr": "$remote_addr", '
+                 '"http_x_forwarded_for": "$http_x_forwarded_for", '
+                 '"remote_user": "$remote_user", '
+                 '"request_uri": "$request_uri", '
+                 '"request_method": "$request_method", '
+                 '"http_referrer": "$http_referer", '
+                 '"vhost": "$host", '
+                 '"server_name": "$server_name", '
+                 '"upstream_addr": "$upstream_addr", '
+                 '"server_protocol": "$server_protocol", '
+                 '"scheme": "$scheme", '
+                 '"http_user_agent": "$http_user_agent" }';
+
+    error_log  syslog:server=unix:/dev/log,tag=nginx_error,nohostname,facility=local7,severity=warn warn;
+
+    ##
+    # Gzip Settings
+    ##
+
+    gzip on;
+    gzip_disable "msie6";
+
+    # gzip_vary on;
+    # gzip_proxied any;
+    # gzip_comp_level 6;
+    # gzip_buffers 16 8k;
+    # gzip_http_version 1.1;
+    # gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+    ##
+    # Virtual Host Configs
+    ##
+
+    include /etc/nginx/conf.d/*.conf;
+    include {{ nginx_sites_enabled_path }}/*;
+
+{% if nginx_extra_http_options %}
+    {{ nginx_extra_http_options|indent(4) }}
+{% endif %}
+}

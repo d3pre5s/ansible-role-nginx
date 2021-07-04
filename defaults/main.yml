@@ -1,29 +1,13 @@
-Ansible Role NGINX
-=========
-
-A brief description of the role goes here.
-
-Requirements
-------------
-
-Any pre-requisites that may not be covered by Ansible itself or the role should
-be mentioned here. For instance, if the role uses the EC2 module, it may be a
-good idea to mention in this section that the boto package is required.
-
-Role Variables
---------------
-
-defaults file for ansible-role-nginx
-
-```
-#install
+---
+# defaults file for ansible-role-nginx
+# install
 nginx_default_release: ""
 nginx_ppa_use: true
 nginx_ppa_version: stable
 nginx_ppa_source: "nginx"
 nginx_package_name: "nginx"
 
-nginx_remove_default: false
+nginx_remove_default: true
 
 # nginx custom configuration
 nginx_replace_nginxconf: true
@@ -59,28 +43,3 @@ nginx_htpasswd: []
 nginx_dhparam: false
 #nginx_dhparam_file: /etc/nginx/dhparams.pem (optional)
 #nginx_dhparam_size: 4096 (optional)
-```
-
-Dependencies
-------------
-
-A list of other roles hosted on Galaxy should go here, plus any details in
-regards to parameters that may need to be set for other roles, or variables that
-are used from other roles.
-
-Example Playbook
-----------------
-
-    - hosts: web
-      roles:
-         - nginx
-
-License
--------
-
-BSD
-
-Author Information
-------------------
-
-Konstantin Deepezh, https://t.me/deusops
