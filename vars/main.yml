@@ -3,4 +3,4 @@
 nginx_user: "www-data"
 nginx_sites_enabled_path: /etc/nginx/sites-enabled
 nginx_sites_available_path: /etc/nginx/sites-available
-nginx_default_vhost_path: "{{ nginx_sites_available_path }}/default"
+nginx_default_vhost_path: "{{ nginx_sites_enabled_path }}/default"

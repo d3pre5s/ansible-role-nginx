@@ -29,7 +29,7 @@
 - name: nginx | configure sites
   template:
     src: "{{ item }}"
-    dest: "{{ nginx_sites_available_path }}"
+    dest: "{{ nginx_sites_available_path }}/{{ item | basename | splitext | first }}"
     backup: "yes"
     mode: 0644
   with_fileglob:
@@ -40,8 +40,8 @@
 
 - name: nginx | enable new vhosts in nginx
   file:
-    src: "{{ nginx_sites_available_path }}/{{ item | basename }}"
-    dest: "{{ nginx_sites_enabled_path }}/{{ item | basename }}"
+    src: "{{ nginx_sites_available_path }}/{{ item | basename | splitext | first }}"
+    dest: "{{ nginx_sites_enabled_path }}/{{ item | basename | splitext | first }}"
     state: link
   with_fileglob:
     - "{{ nginx_templates_path }}/sites/*.conf.j2"
